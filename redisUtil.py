@@ -56,7 +56,7 @@ class TimeSeriesAccess:
         return "data_close_0:" + symbol
 
     @staticmethod
-    def RealTimeStockData(symbol, rts: Client = None):
+    def RealTimeStockTrade(symbol, rts: Client = None):
         timeseries: Client = None
         if rts is None:
             timeseries = TimeSeriesAccess.connection()
@@ -64,6 +64,29 @@ class TimeSeriesAccess:
             timeseries = rts
         realTimeData = timeseries.range(symbol, 0, '+')
         return realTimeData
+
+    @staticmethod
+    def RealTimeStockBar(symbol: str, suffix: str, period: str, rts: Client = None):
+        timeseries: Client = None
+        if rts is None:
+            timeseries = TimeSeriesAccess.connection()
+        else:
+            timeseries = rts
+        key = bar_key(symbol, suffix, period)
+        realTimeData = timeseries.range(key, 0, 999999999999999)
+        return TimeSeriesAccess.to_datetime(realTimeData)
+
+    @staticmethod
+    def timestamp2datetime(timestamp):
+        ts = timestamp / 1000
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
+
+    @staticmethod
+    def to_datetime(bars):
+        data = []
+        for bar in bars:
+            data.append((TimeSeriesAccess.timestamp2datetime(bar[0]), bar[1]))
+        return data
 
 
 class KeyName:

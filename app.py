@@ -28,17 +28,21 @@ def getQueryBool(request, name):
 
 
 def _getRealtimeStockPrice(request):
-    symbol = getQueryString(request, 'symbol')
-    period = getQueryString(request, 'period')
-    if getQueryBool(request, 'isStock'):
+    symbol = getQueryString(request, 'symbol').upper()
+    period = getQueryString(request, 'period').upper()
+    if (period == "0"):
         symbol = TimeSeriesAccess.RealTimeSymbol(symbol)
-    result = TimeSeriesAccess.RealTimeStockData(symbol)
-    return json.dumps(result)
+        result = TimeSeriesAccess.RealTimeStockTrade(symbol)
+        return json.dumps(result)
+    else:
+        suffix = getQueryString(request, 'suffix').lower()
+        result = TimeSeriesAccess.RealTimeStockBar(symbol, suffix, period)
+        return json.dumps(result)
 
 
 def _getStockHistorical(request):
-    symbol = getQueryString(request, 'symbol')
-    timeframe = getQueryString(request, 'timeframe')
+    symbol = getQueryString(request, 'symbol').upper()
+    timeframe = getQueryString(request, 'timeframe').upper()
     alpaca = AlpacaAccess()
     result = alpaca.HistoricalPrices(symbol, timeframe)
     return result.text
@@ -61,6 +65,9 @@ def redisHashWithKey(key):
         result.append(data)
     return result
 
+
+# http://localhost:8105/data/stock-realtime?symbol=SOTK&period=0
+# http://localhost:8105/data/stock-realtime?symbol=SOTK&period=5MIN&suffix=close
 
 @app.route("/data/stock-realtime", methods=['GET'])
 def getRealtimeStockPrice():
