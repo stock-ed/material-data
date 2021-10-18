@@ -66,6 +66,50 @@ class TimeSeriesAccess:
         return realTimeData
 
     @staticmethod
+    def firstTimestamp(now: int, ts1: int, mins: int):
+        if (ts1 + mins) < now:
+            return TimeSeriesAccess.firstTimestamp(now, ts1 + mins, mins)
+        else:
+            return ts1
+
+    @staticmethod
+    def composeStockData(stamps: [], data):
+        result = []
+        for ts in stamps:
+            isFound = False
+            value = -1
+            for item in data:
+                if ts >= item[0]:
+                    oneitem = (ts, item[1])
+                    result.append(oneitem)
+                    value = item[1]
+                    isFound = True
+                    break
+            if not isFound and value >= 0:
+                oneitem = (ts, value)
+                result.append(oneitem)
+        return result
+
+    @staticmethod
+    def _bar_adjustBar(data, timeframe='1MIN', ts=time.time()):
+        # get timestamp
+        switcher = {
+            "1MIN": 60,
+            "2MIN": 120,
+            "5MIN": 300,
+        }
+        mins = switcher.get(timeframe, 60)
+        tstamps = []
+        ts1 = TimeSeriesAccess.firstTimestamp(ts, data[0][0], mins)
+        tstamps.append(ts1 - mins * 4)
+        tstamps.append(ts1 - mins * 3)
+        tstamps.append(ts1 - mins * 2)
+        tstamps.append(ts1 - mins)
+        tstamps.append(ts1)
+        result = TimeSeriesAccess.composeStockData(tstamps, data)
+        return result
+
+    @staticmethod
     def RealTimeStockBar(symbol: str, suffix: str, period: str, rts: Client = None):
         timeseries: Client = None
         if rts is None:
@@ -77,8 +121,8 @@ class TimeSeriesAccess:
         return TimeSeriesAccess.to_datetime(realTimeData)
 
     @staticmethod
-    def timestamp2datetime(timestamp):
-        ts = timestamp / 1000
+    def timestamp2datetime(ts):
+        # ts = timestamp / 1000
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
 
     @staticmethod
@@ -123,3 +167,9 @@ class KeyName:
     @staticmethod
     def KeyScore(symbol):
         return "RTS_SCORE:" + symbol.upper()
+
+
+if __name__ == '__main__':
+    data = [(1000, 5.2), (940, 5.1), (820, 5.0)]
+    result = TimeSeriesAccess._bar_adjustBar(data, ts=1001)
+    print(result)

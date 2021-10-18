@@ -3,7 +3,7 @@ from flask_cors import CORS
 import json
 from flask import request, jsonify
 import os
-from redisUtil import TimeSeriesAccess, KeyName
+from redisUtil import TimeSeriesAccess, KeyName, bar_key
 from alpacaUtil import AlpacaAccess
 from redisHash import RedisHash
 from operator import itemgetter
